@@ -15,6 +15,26 @@ python solve.py               # CLI report, all 11 questions
 Core engine (`solve.py`) is **standard library only**. Streamlit and pandas are
 needed for the UI, nothing else.
 
+### Optional — enable Claude narration
+
+The app answers all 12 questions without it. To see the LLM layer and its
+verifier in action:
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...     # Windows Git Bash / macOS / Linux
+python -m streamlit run app.py
+```
+
+The sidebar then shows 🟢 *Claude narration active*. Toggle **Use Claude to
+write answers**; every generated answer is audited by a non-LLM verifier before
+it is displayed.
+
+Deploying to Streamlit Cloud: add the key under **Settings → Secrets** as
+`ANTHROPIC_API_KEY = "sk-ant-..."` rather than an environment variable.
+
+Not working? Run `python check_ai.py` — it tests each precondition in turn
+(interpreter, SDK, key, live API call) and names the one that failed.
+
 ---
 
 ## The problem

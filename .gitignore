@@ -17,3 +17,8 @@ venv/
 .DS_Store
 .vscode/
 .idea/
+
+# Never commit secrets
+.streamlit/secrets.toml
+.env
+*.key

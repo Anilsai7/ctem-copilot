@@ -205,7 +205,11 @@ def llm_answer(question, key):
         try:
             prose = llm_layer.narrate(question, ev)
         except Exception as e:
-            st.warning(f"LLM unavailable ({e}). Showing the deterministic answer.")
+            head, detail = llm_layer.friendly_error(e)
+            st.info(f"**{head}**\n\n{detail}")
+            st.caption("↓ Deterministic answer — identical to what the tool "
+                       "produces with no LLM configured.")
+            st.write("")
             render_answer(key)
             return
         ok, problems = llm_layer.verify(prose, ev)
