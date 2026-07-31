@@ -1,0 +1,182 @@
+==================================================================================
+  Acme Financial Services (SYNTHETIC — FOR INTERVIEW USE ONLY)
+  Assets: 23   Findings: 22   KEV-listed: 19
+  Sources: assets.json  +  CISA KEV 2026.07.29 (1656 exploited CVEs, released 2026-07-29)
+  Evaluated as of 2026-07-30
+==================================================================================
+
+==================================================================================
+Q1. Which of our assets have critical unpatched CVEs?
+==================================================================================
+9 assets carry a CRITICAL (CVSS >= 9.0) vulnerability, across 16 findings:
+
+  [FIN-SRV-002 | fin-db01.corp.local] log4j-core 2.14.0 - CVE-2021-44228 CVSS 10.0 - KEV added 2021-12-10, due 2021-12-24 [OVERDUE], ransomware-linked - risk 100/100 [CRITICAL]
+  [FIN-SRV-001 | fin-app01.corp.local] Apache HTTP Server 2.4.49 - CVE-2021-41773 CVSS 9.8 - KEV added 2021-11-03, due 2021-11-17 [OVERDUE], ransomware-linked - risk 99/100 [CRITICAL]
+  [FIN-SRV-001 | fin-app01.corp.local] Apache HTTP Server 2.4.49 - CVE-2021-42013 CVSS 9.8 - KEV added 2021-11-03, due 2021-11-17 [OVERDUE], ransomware-linked - risk 99/100 [CRITICAL]
+  [OPS-NET-003 | ops-vpn01.corp.local] Fortinet FortiOS 6.4.5 - CVE-2022-42475 CVSS 9.8 - KEV added 2022-12-13, due 2023-01-03 [OVERDUE], ransomware-linked - risk 99/100 [CRITICAL]
+  [OPS-NET-003 | ops-vpn01.corp.local] Fortinet FortiOS 6.4.5 - CVE-2024-21762 CVSS 9.8 - KEV added 2024-02-09, due 2024-02-16 [OVERDUE], ransomware-linked - risk 99/100 [CRITICAL]
+  [IT-SRV-002 | it-mail01.corp.local] Microsoft Exchange Server 15.1.2375.7 - CVE-2021-34473 CVSS 9.8 - KEV added 2021-11-03, due 2021-11-17 [OVERDUE], ransomware-linked - risk 99/100 [CRITICAL]
+  [FIN-SRV-002 | fin-db01.corp.local] log4j-core 2.14.0 - CVE-2021-45046 CVSS 9.0 - KEV added 2023-05-01, due 2023-05-22 [OVERDUE], ransomware-linked - risk 97/100 [CRITICAL]
+  [OPS-NET-001 | ops-fw01.corp.local] Cisco IOS XE 16.9.4 - CVE-2023-20198 CVSS 10.0 - KEV added 2023-10-16, due 2023-10-20 [OVERDUE] - risk 95/100 [CRITICAL]
+  [ENG-SRV-001 | eng-build01.corp.local] log4j-core 2.14.1 - CVE-2021-44228 CVSS 10.0 - KEV added 2021-12-10, due 2021-12-24 [OVERDUE], ransomware-linked - risk 93/100 [CRITICAL]
+  [HR-SRV-001 | hr-app01.corp.local] log4j-core 2.13.3 - CVE-2021-44228 CVSS 10.0 - KEV added 2021-12-10, due 2021-12-24 [OVERDUE], ransomware-linked - risk 93/100 [CRITICAL]
+  [ENG-SRV-001 | eng-build01.corp.local] Jenkins 2.303.1 - CVE-2024-23897 CVSS 9.8 - KEV added 2024-08-19, due 2024-09-09 [OVERDUE], ransomware-linked - risk 92/100 [CRITICAL]
+  [IT-NET-001 | it-proxy01.corp.local] F5 BIG-IP 14.1.4 - CVE-2022-1388 CVSS 9.8 - KEV added 2022-05-10, due 2022-05-31 [OVERDUE], ransomware-linked - risk 92/100 [CRITICAL]
+  [ENG-SRV-001 | eng-build01.corp.local] log4j-core 2.14.1 - CVE-2021-45046 CVSS 9.0 - KEV added 2023-05-01, due 2023-05-22 [OVERDUE], ransomware-linked - risk 90/100 [CRITICAL]
+  [OPS-SRV-001 | ops-mon01.corp.local] log4j-core 2.15.0 - CVE-2021-45046 CVSS 9.0 - KEV added 2023-05-01, due 2023-05-22 [OVERDUE], ransomware-linked - risk 90/100 [CRITICAL]
+  [HR-SRV-001 | hr-app01.corp.local] log4j-core 2.13.3 - CVE-2021-45046 CVSS 9.0 - KEV added 2023-05-01, due 2023-05-22 [OVERDUE], ransomware-linked - risk 90/100 [CRITICAL]
+  [HR-SRV-001 | hr-app01.corp.local] Apache Tomcat 9.0.52 - CVE-2025-24813 CVSS 9.8 - KEV added 2025-04-01, due 2025-04-22 [OVERDUE] - risk 87/100 [CRITICAL]
+
+==================================================================================
+Q2. What is our highest-risk server right now and why?
+==================================================================================
+FIN-SRV-002 (fin-db01.corp.local) - Finance, critical criticality.
+
+  WHY:
+    severity       +30.0
+    exploited      +30
+    criticality    +25
+    urgency        +15
+    TOTAL          100.0/100  [CRITICAL]
+
+  Driver: CVE-2021-44228 on log4j-core 2.14.0 - Log4Shell JNDI RCE. Affects 2.0-beta9 through 2.14.1 (fixed in 2.15.0).
+  [FIN-SRV-002 | fin-db01.corp.local] log4j-core 2.14.0 - CVE-2021-44228 CVSS 10.0 - KEV added 2021-12-10, due 2021-12-24 [OVERDUE], ransomware-linked - risk 100/100 [CRITICAL]
+
+  Same host, other findings:
+    [FIN-SRV-002 | fin-db01.corp.local] log4j-core 2.14.0 - CVE-2021-45046 CVSS 9.0 - KEV added 2023-05-01, due 2023-05-22 [OVERDUE], ransomware-linked - risk 97/100 [CRITICAL]
+
+==================================================================================
+Q3. Which software package should we patch first to reduce the most exposure?
+==================================================================================
+ #  package                             worst  hosts  CVEs  KEV  flags
+ 1. log4j-core                            100      4     2    7  OVERDUE, 1 critical host(s)
+ 2. Apache HTTP Server                     99      1     2    2  OVERDUE, 1 critical host(s)
+ 3. Fortinet FortiOS                       99      1     2    2  OVERDUE, 1 critical host(s)
+ 4. Microsoft Exchange Server              99      1     1    1  OVERDUE, 1 critical host(s)
+ 5. Cisco IOS XE                           95      1     1    1  OVERDUE, 1 critical host(s)
+ 6. Jenkins                                92      1     1    1  OVERDUE
+ 7. F5 BIG-IP                              92      1     1    1  OVERDUE
+ 8. Apache Tomcat                          87      1     1    1  OVERDUE
+ 9. Veeam Backup & Replication             86      1     1    1  OVERDUE
+10. Grafana                                80      1     1    1  OVERDUE
+11. Internet Explorer                      75      1     1    1  OVERDUE
+12. PuTTY                                  43      2     1    0  1 critical host(s)
+13. Sonatype Nexus Repository Manager      40      1     1    0  
+
+  PATCH FIRST: log4j-core - worst single action scores 100/100 on ENG-SRV-001, FIN-SRV-002, HR-SRV-001, OPS-SRV-001.
+  Ranked by worst single action, not CVE volume: volume would put a stale browser above an actively-exploited firewall.
+
+==================================================================================
+Q4. How many Finance department assets are affected by actively exploited vulnerabilities?
+==================================================================================
+2 of 4 Finance assets - FIN-SRV-001, FIN-SRV-002
+
+  [FIN-SRV-002 | fin-db01.corp.local] log4j-core 2.14.0 - CVE-2021-44228 CVSS 10.0 - KEV added 2021-12-10, due 2021-12-24 [OVERDUE], ransomware-linked - risk 100/100 [CRITICAL]
+  [FIN-SRV-001 | fin-app01.corp.local] Apache HTTP Server 2.4.49 - CVE-2021-41773 CVSS 9.8 - KEV added 2021-11-03, due 2021-11-17 [OVERDUE], ransomware-linked - risk 99/100 [CRITICAL]
+  [FIN-SRV-001 | fin-app01.corp.local] Apache HTTP Server 2.4.49 - CVE-2021-42013 CVSS 9.8 - KEV added 2021-11-03, due 2021-11-17 [OVERDUE], ransomware-linked - risk 99/100 [CRITICAL]
+  [FIN-SRV-002 | fin-db01.corp.local] log4j-core 2.14.0 - CVE-2021-45046 CVSS 9.0 - KEV added 2023-05-01, due 2023-05-22 [OVERDUE], ransomware-linked - risk 97/100 [CRITICAL]
+
+==================================================================================
+Q5. Are any assets running software with a CISA KEV due date that has already passed?
+==================================================================================
+YES - 19 findings across 11 assets are past their CISA deadline (as of 2026-07-30):
+
+  FIN-SRV-001  CVE-2021-41773   due 2021-11-17  OVERDUE by 1,716 days  (Apache HTTP Server 2.4.49)
+  FIN-SRV-001  CVE-2021-42013   due 2021-11-17  OVERDUE by 1,716 days  (Apache HTTP Server 2.4.49)
+  IT-SRV-002   CVE-2021-34473   due 2021-11-17  OVERDUE by 1,716 days  (Microsoft Exchange Server 15.1.2375.7)
+  HR-WS-002    CVE-2021-26411   due 2021-11-17  OVERDUE by 1,716 days  (Internet Explorer 11.0.220)
+  FIN-SRV-002  CVE-2021-44228   due 2021-12-24  OVERDUE by 1,679 days  (log4j-core 2.14.0)
+  ENG-SRV-001  CVE-2021-44228   due 2021-12-24  OVERDUE by 1,679 days  (log4j-core 2.14.1)
+  HR-SRV-001   CVE-2021-44228   due 2021-12-24  OVERDUE by 1,679 days  (log4j-core 2.13.3)
+  IT-NET-001   CVE-2022-1388    due 2022-05-31  OVERDUE by 1,521 days  (F5 BIG-IP 14.1.4)
+  OPS-NET-003  CVE-2022-42475   due 2023-01-03  OVERDUE by 1,304 days  (Fortinet FortiOS 6.4.5)
+  FIN-SRV-002  CVE-2021-45046   due 2023-05-22  OVERDUE by 1,165 days  (log4j-core 2.14.0)
+  ENG-SRV-001  CVE-2021-45046   due 2023-05-22  OVERDUE by 1,165 days  (log4j-core 2.14.1)
+  OPS-SRV-001  CVE-2021-45046   due 2023-05-22  OVERDUE by 1,165 days  (log4j-core 2.15.0)
+  HR-SRV-001   CVE-2021-45046   due 2023-05-22  OVERDUE by 1,165 days  (log4j-core 2.13.3)
+  IT-SRV-003   CVE-2023-27532   due 2023-09-12  OVERDUE by 1,052 days  (Veeam Backup & Replication 11.0.0.837)
+  OPS-NET-001  CVE-2023-20198   due 2023-10-20  OVERDUE by 1,014 days  (Cisco IOS XE 16.9.4)
+  OPS-NET-003  CVE-2024-21762   due 2024-02-16  OVERDUE by 895 days  (Fortinet FortiOS 6.4.5)
+  ENG-SRV-001  CVE-2024-23897   due 2024-09-09  OVERDUE by 689 days  (Jenkins 2.303.1)
+  HR-SRV-001   CVE-2025-24813   due 2025-04-22  OVERDUE by 464 days  (Apache Tomcat 9.0.52)
+  OPS-SRV-001  CVE-2021-43798   due 2025-10-30  OVERDUE by 273 days  (Grafana 8.2.6)
+
+==================================================================================
+Q6. Summarise our overall vulnerability posture for the CISO in 3 sentences.
+==================================================================================
+1. Across 23 assets we confirmed 22 vulnerability findings covering 16 distinct CVEs, of which 14 are on CISA's Known Exploited Vulnerabilities list and are therefore under active attack in the wild.
+
+2. 11 assets carry at least one actively-exploited CVE - 5 of them business-critical - and 19 findings are already past their federal remediation deadline, the oldest by 1,716 days.
+
+3. The single highest-risk item is CVE-2021-44228 on FIN-SRV-002 (log4j-core 2.14.0, risk 100/100); note this analysis covers 13 high-signal packages and excludes operating-system patching, so it is a floor on exposure, not a complete picture.
+
+==================================================================================
+Q7. Which business unit has the most critical exposure?
+==================================================================================
+  unit            worst  findings   KEV  overdue   assets  crit
+  Finance           100         4     4        4      2/4     2
+  Operations         99         6     5        5      4/5     3
+  IT                 99         4     3        3      4/5     1
+  HR                 93         4     4        4      2/3     0
+  Engineering        93         4     3        3      2/4     0
+
+  Finance - worst single finding scores 100/100. Ranked by worst finding, so a large unit can't win on headcount alone.
+
+==================================================================================
+Q8. What would patching Apache HTTP Server on all affected hosts reduce our CVE count by?
+==================================================================================
+  Hosts affected            : 1 (FIN-SRV-001)
+  Versions deployed         : 2.4.49
+  Findings closed           : 2
+  Distinct CVEs closed      : 2 (CVE-2021-41773, CVE-2021-42013)
+  Fleet distinct CVEs       : 16 -> 14 (net reduction 2)
+  Actively-exploited closed : 2
+  Risk points removed       : 199 of 1878 fleet total
+
+  One action ('upgrade Apache to 2.4.58+ on FIN-SRV-001') closes both.
+
+==================================================================================
+Q9. List all CVEs affecting our network devices sorted by CVSS score.
+==================================================================================
+  [OPS-NET-001 | ops-fw01.corp.local] Cisco IOS XE 16.9.4 - CVE-2023-20198 CVSS 10.0 - KEV added 2023-10-16, due 2023-10-20 [OVERDUE] - risk 95/100 [CRITICAL]
+       Web UI privilege escalation, implant deployment. Affects IOS XE 16.x/17.x with HTTP server enabled.
+  [OPS-NET-003 | ops-vpn01.corp.local] Fortinet FortiOS 6.4.5 - CVE-2022-42475 CVSS 9.8 - KEV added 2022-12-13, due 2023-01-03 [OVERDUE], ransomware-linked - risk 99/100 [CRITICAL]
+       SSL-VPN heap overflow, pre-auth RCE. Affects 6.4.0-6.4.10.
+  [OPS-NET-003 | ops-vpn01.corp.local] Fortinet FortiOS 6.4.5 - CVE-2024-21762 CVSS 9.8 - KEV added 2024-02-09, due 2024-02-16 [OVERDUE], ransomware-linked - risk 99/100 [CRITICAL]
+       SSL-VPN out-of-bounds write. Affects 6.4.0-6.4.14.
+  [IT-NET-001 | it-proxy01.corp.local] F5 BIG-IP 14.1.4 - CVE-2022-1388 CVSS 9.8 - KEV added 2022-05-10, due 2022-05-31 [OVERDUE], ransomware-linked - risk 92/100 [CRITICAL]
+       iControl REST auth bypass -> RCE. Affects 13.1.x-16.1.x.
+
+==================================================================================
+Q10. Any assets not scanned in the last 30 days that also have high-severity CVEs?
+==================================================================================
+YES - 12 assets. NOTE: every asset in this inventory was last scanned in May 2026, so as of 2026-07-30 the entire fleet is stale. That is itself the finding.
+
+  asset       last scan       age      crit  HIGH+ CVEs
+  FIN-SRV-002 2026-05-15      76d  critical           2
+  FIN-SRV-001 2026-05-28      63d  critical           2
+  OPS-NET-003 2026-02-28     152d  critical           2
+  IT-SRV-002  2026-06-05      55d  critical           1
+  OPS-NET-001 2026-03-15     137d  critical           1
+  ENG-SRV-001 2026-06-02      58d      high           3
+  HR-SRV-001  2026-05-25      66d      high           3
+  IT-NET-001  2026-04-01     120d      high           1
+  OPS-SRV-001 2026-05-20      71d      high           2
+  IT-SRV-003  2026-01-15     196d      high           1
+  HR-WS-002   2026-04-30      91d       low           1
+  ENG-SRV-002 2026-04-10     111d      high           1
+
+==================================================================================
+WHAT THIS DOES NOT COVER (absence of a finding is not evidence of safety)
+==================================================================================
+  Packages with vulnerability rules : 13
+  Packages in inventory             : 47
+  Not assessed                      : 34
+    1Password, 7-Zip, Active Directory Domain Services, Adobe Acrobat Reader, Cisco IOS, CrowdStrike Falcon Sensor, Docker, Git, GitLab CE, Google Chrome, Homebrew, Java SE, Microsoft .NET Framework, Microsoft DNS Server, Microsoft Office, Microsoft Office for Mac, Microsoft SQL Server, Mozilla Firefox, NGINX, Nmap, Node.js, OpenJDK, OpenSSH, OpenSSH for Windows, OpenSSL, PostgreSQL, Prometheus, Python, Ruby, Slack, Symantec Endpoint Protection, Visual Studio Code, WinSCP, Zoom
+
+  Operating systems are excluded: OS patching runs on a separate
+  Patch-Tuesday/WSUS workflow, and pulling every Windows CVE would
+  recreate the 3,400-finding noise problem this tool exists to fix.
+  Java SE is excluded: NVD uses 1.8.0:update_271, the inventory says
+  8.0.271 - reconciling those by guesswork would produce confident
+  but wrong applicability, so it is flagged for manual review.

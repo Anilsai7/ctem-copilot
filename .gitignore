@@ -1,0 +1,19 @@
+# Large leftovers from the full-NVD approach — the app does not read these.
+# cache/nvd is ~63MB of raw API responses; data/index.json is ~23MB.
+cache/nvd/
+data/index.json
+
+# Logs
+build.log
+streamlit.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/

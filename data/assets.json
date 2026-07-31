@@ -1,0 +1,659 @@
+{
+  "metadata": {
+    "organisation": "Acme Financial Services (SYNTHETIC \u2014 FOR INTERVIEW USE ONLY)",
+    "generated_date": "2026-06-01",
+    "asset_count": 23,
+    "departments": [
+      "Finance",
+      "Engineering",
+      "Operations",
+      "HR",
+      "IT",
+      "Executive"
+    ],
+    "criticality_levels": {
+      "critical": "Business-critical system; outage has immediate financial/regulatory impact",
+      "high": "Important system; outage degrades operations significantly",
+      "medium": "Standard business system; outage is disruptive but manageable",
+      "low": "Non-critical endpoint or utility system"
+    },
+    "note": "Software versions are intentionally mixed \u2014 some match known CVEs in public databases, some do not. Candidates are expected to cross-reference against CISA KEV and/or NIST NVD."
+  },
+  "assets": [
+    {
+      "asset_id": "FIN-SRV-001",
+      "hostname": "fin-app01.corp.local",
+      "ip_address": "10.10.1.11",
+      "asset_type": "server",
+      "department": "Finance",
+      "criticality": "critical",
+      "os": "Windows Server 2019",
+      "os_version": "10.0.17763",
+      "last_scan_date": "2026-05-28",
+      "installed_software": [
+        {
+          "name": "Apache HTTP Server",
+          "version": "2.4.49"
+        },
+        {
+          "name": "OpenSSL",
+          "version": "1.0.2u"
+        },
+        {
+          "name": "Java SE",
+          "version": "8.0.271"
+        },
+        {
+          "name": "Microsoft .NET Framework",
+          "version": "4.8"
+        }
+      ]
+    },
+    {
+      "asset_id": "FIN-SRV-002",
+      "hostname": "fin-db01.corp.local",
+      "ip_address": "10.10.1.12",
+      "asset_type": "server",
+      "department": "Finance",
+      "criticality": "critical",
+      "os": "Red Hat Enterprise Linux 8.4",
+      "os_version": "8.4",
+      "last_scan_date": "2026-05-15",
+      "installed_software": [
+        {
+          "name": "PostgreSQL",
+          "version": "12.8"
+        },
+        {
+          "name": "OpenSSL",
+          "version": "1.1.1k"
+        },
+        {
+          "name": "log4j-core",
+          "version": "2.14.0"
+        },
+        {
+          "name": "Python",
+          "version": "3.9.7"
+        }
+      ]
+    },
+    {
+      "asset_id": "FIN-WS-001",
+      "hostname": "fin-ws-jsmith.corp.local",
+      "ip_address": "10.10.1.51",
+      "asset_type": "workstation",
+      "department": "Finance",
+      "criticality": "medium",
+      "os": "Windows 10",
+      "os_version": "10.0.19041",
+      "last_scan_date": "2026-06-01",
+      "installed_software": [
+        {
+          "name": "Microsoft Office",
+          "version": "16.0.13801"
+        },
+        {
+          "name": "Adobe Acrobat Reader",
+          "version": "21.001.20135"
+        },
+        {
+          "name": "Google Chrome",
+          "version": "94.0.4606.81"
+        },
+        {
+          "name": "7-Zip",
+          "version": "19.00"
+        }
+      ]
+    },
+    {
+      "asset_id": "FIN-WS-002",
+      "hostname": "fin-ws-mbrown.corp.local",
+      "ip_address": "10.10.1.52",
+      "asset_type": "workstation",
+      "department": "Finance",
+      "criticality": "medium",
+      "os": "Windows 10",
+      "os_version": "10.0.19044",
+      "last_scan_date": "2026-06-01",
+      "installed_software": [
+        {
+          "name": "Microsoft Office",
+          "version": "16.0.14931"
+        },
+        {
+          "name": "Adobe Acrobat Reader",
+          "version": "23.001.20093"
+        },
+        {
+          "name": "Mozilla Firefox",
+          "version": "115.0"
+        },
+        {
+          "name": "Zoom",
+          "version": "5.14.2"
+        }
+      ]
+    },
+    {
+      "asset_id": "ENG-SRV-001",
+      "hostname": "eng-build01.corp.local",
+      "ip_address": "10.10.2.11",
+      "asset_type": "server",
+      "department": "Engineering",
+      "criticality": "high",
+      "os": "Ubuntu 20.04 LTS",
+      "os_version": "20.04",
+      "last_scan_date": "2026-06-02",
+      "installed_software": [
+        {
+          "name": "Jenkins",
+          "version": "2.303.1"
+        },
+        {
+          "name": "log4j-core",
+          "version": "2.14.1"
+        },
+        {
+          "name": "OpenJDK",
+          "version": "11.0.12"
+        },
+        {
+          "name": "Git",
+          "version": "2.32.0"
+        },
+        {
+          "name": "Docker",
+          "version": "20.10.8"
+        }
+      ]
+    },
+    {
+      "asset_id": "ENG-SRV-002",
+      "hostname": "eng-nexus01.corp.local",
+      "ip_address": "10.10.2.12",
+      "asset_type": "server",
+      "department": "Engineering",
+      "criticality": "high",
+      "os": "CentOS 7.9",
+      "os_version": "7.9",
+      "last_scan_date": "2026-04-10",
+      "installed_software": [
+        {
+          "name": "Sonatype Nexus Repository Manager",
+          "version": "3.36.0"
+        },
+        {
+          "name": "Apache HTTP Server",
+          "version": "2.4.51"
+        },
+        {
+          "name": "OpenSSL",
+          "version": "1.0.2k"
+        },
+        {
+          "name": "OpenJDK",
+          "version": "8.0.302"
+        }
+      ]
+    },
+    {
+      "asset_id": "ENG-SRV-003",
+      "hostname": "eng-gitlab01.corp.local",
+      "ip_address": "10.10.2.13",
+      "asset_type": "server",
+      "department": "Engineering",
+      "criticality": "high",
+      "os": "Ubuntu 22.04 LTS",
+      "os_version": "22.04",
+      "last_scan_date": "2026-06-03",
+      "installed_software": [
+        {
+          "name": "GitLab CE",
+          "version": "14.5.2"
+        },
+        {
+          "name": "PostgreSQL",
+          "version": "13.5"
+        },
+        {
+          "name": "NGINX",
+          "version": "1.18.0"
+        },
+        {
+          "name": "Ruby",
+          "version": "2.7.4"
+        }
+      ]
+    },
+    {
+      "asset_id": "ENG-WS-001",
+      "hostname": "eng-ws-dlee.corp.local",
+      "ip_address": "10.10.2.51",
+      "asset_type": "workstation",
+      "department": "Engineering",
+      "criticality": "low",
+      "os": "macOS Monterey",
+      "os_version": "12.6",
+      "last_scan_date": "2026-05-30",
+      "installed_software": [
+        {
+          "name": "Python",
+          "version": "3.10.4"
+        },
+        {
+          "name": "Node.js",
+          "version": "16.17.0"
+        },
+        {
+          "name": "Visual Studio Code",
+          "version": "1.73.1"
+        },
+        {
+          "name": "Homebrew",
+          "version": "3.6.5"
+        }
+      ]
+    },
+    {
+      "asset_id": "OPS-SRV-001",
+      "hostname": "ops-mon01.corp.local",
+      "ip_address": "10.10.3.11",
+      "asset_type": "server",
+      "department": "Operations",
+      "criticality": "high",
+      "os": "CentOS 8.4",
+      "os_version": "8.4",
+      "last_scan_date": "2026-05-20",
+      "installed_software": [
+        {
+          "name": "Grafana",
+          "version": "8.2.6"
+        },
+        {
+          "name": "Prometheus",
+          "version": "2.32.0"
+        },
+        {
+          "name": "log4j-core",
+          "version": "2.15.0"
+        },
+        {
+          "name": "OpenJDK",
+          "version": "11.0.13"
+        }
+      ]
+    },
+    {
+      "asset_id": "OPS-SRV-002",
+      "hostname": "ops-jump01.corp.local",
+      "ip_address": "10.10.3.12",
+      "asset_type": "server",
+      "department": "Operations",
+      "criticality": "critical",
+      "os": "Windows Server 2016",
+      "os_version": "10.0.14393",
+      "last_scan_date": "2026-06-04",
+      "installed_software": [
+        {
+          "name": "OpenSSH for Windows",
+          "version": "8.0p1"
+        },
+        {
+          "name": "PuTTY",
+          "version": "0.76"
+        },
+        {
+          "name": "WinSCP",
+          "version": "5.19.6"
+        },
+        {
+          "name": "Microsoft .NET Framework",
+          "version": "4.7.2"
+        }
+      ]
+    },
+    {
+      "asset_id": "OPS-NET-001",
+      "hostname": "ops-fw01.corp.local",
+      "ip_address": "10.10.3.1",
+      "asset_type": "network_device",
+      "department": "Operations",
+      "criticality": "critical",
+      "os": "Cisco IOS XE",
+      "os_version": "16.9.4",
+      "last_scan_date": "2026-03-15",
+      "installed_software": [
+        {
+          "name": "Cisco IOS XE",
+          "version": "16.9.4"
+        }
+      ]
+    },
+    {
+      "asset_id": "OPS-NET-002",
+      "hostname": "ops-sw01.corp.local",
+      "ip_address": "10.10.3.2",
+      "asset_type": "network_device",
+      "department": "Operations",
+      "criticality": "high",
+      "os": "Cisco IOS",
+      "os_version": "15.2(7)E3",
+      "last_scan_date": "2026-03-15",
+      "installed_software": [
+        {
+          "name": "Cisco IOS",
+          "version": "15.2(7)E3"
+        }
+      ]
+    },
+    {
+      "asset_id": "OPS-NET-003",
+      "hostname": "ops-vpn01.corp.local",
+      "ip_address": "10.10.3.3",
+      "asset_type": "network_device",
+      "department": "Operations",
+      "criticality": "critical",
+      "os": "Fortinet FortiOS",
+      "os_version": "6.4.5",
+      "last_scan_date": "2026-02-28",
+      "installed_software": [
+        {
+          "name": "Fortinet FortiOS",
+          "version": "6.4.5"
+        }
+      ]
+    },
+    {
+      "asset_id": "HR-SRV-001",
+      "hostname": "hr-app01.corp.local",
+      "ip_address": "10.10.4.11",
+      "asset_type": "server",
+      "department": "HR",
+      "criticality": "high",
+      "os": "Windows Server 2019",
+      "os_version": "10.0.17763",
+      "last_scan_date": "2026-05-25",
+      "installed_software": [
+        {
+          "name": "Apache Tomcat",
+          "version": "9.0.52"
+        },
+        {
+          "name": "Java SE",
+          "version": "8.0.301"
+        },
+        {
+          "name": "log4j-core",
+          "version": "2.13.3"
+        },
+        {
+          "name": "Microsoft SQL Server",
+          "version": "2017.14.0.3048"
+        }
+      ]
+    },
+    {
+      "asset_id": "HR-WS-001",
+      "hostname": "hr-ws-aparker.corp.local",
+      "ip_address": "10.10.4.51",
+      "asset_type": "workstation",
+      "department": "HR",
+      "criticality": "low",
+      "os": "Windows 11",
+      "os_version": "10.0.22621",
+      "last_scan_date": "2026-06-02",
+      "installed_software": [
+        {
+          "name": "Microsoft Office",
+          "version": "16.0.15928"
+        },
+        {
+          "name": "Adobe Acrobat Reader",
+          "version": "23.003.20244"
+        },
+        {
+          "name": "Google Chrome",
+          "version": "114.0.5735.199"
+        },
+        {
+          "name": "Slack",
+          "version": "4.33.73"
+        }
+      ]
+    },
+    {
+      "asset_id": "HR-WS-002",
+      "hostname": "hr-ws-kwilson.corp.local",
+      "ip_address": "10.10.4.52",
+      "asset_type": "workstation",
+      "department": "HR",
+      "criticality": "low",
+      "os": "Windows 10",
+      "os_version": "10.0.18363",
+      "last_scan_date": "2026-04-30",
+      "installed_software": [
+        {
+          "name": "Microsoft Office",
+          "version": "16.0.12527"
+        },
+        {
+          "name": "Adobe Acrobat Reader",
+          "version": "20.001.30002"
+        },
+        {
+          "name": "Internet Explorer",
+          "version": "11.0.220"
+        },
+        {
+          "name": "Java SE",
+          "version": "7.0.251"
+        }
+      ]
+    },
+    {
+      "asset_id": "IT-SRV-001",
+      "hostname": "it-ad01.corp.local",
+      "ip_address": "10.10.5.11",
+      "asset_type": "server",
+      "department": "IT",
+      "criticality": "critical",
+      "os": "Windows Server 2019",
+      "os_version": "10.0.17763",
+      "last_scan_date": "2026-06-05",
+      "installed_software": [
+        {
+          "name": "Active Directory Domain Services",
+          "version": "10.0.17763"
+        },
+        {
+          "name": "Microsoft DNS Server",
+          "version": "10.0.17763"
+        },
+        {
+          "name": "OpenSSL",
+          "version": "1.1.1l"
+        },
+        {
+          "name": "Microsoft .NET Framework",
+          "version": "4.8"
+        }
+      ]
+    },
+    {
+      "asset_id": "IT-SRV-002",
+      "hostname": "it-mail01.corp.local",
+      "ip_address": "10.10.5.12",
+      "asset_type": "server",
+      "department": "IT",
+      "criticality": "critical",
+      "os": "Windows Server 2019",
+      "os_version": "10.0.17763",
+      "last_scan_date": "2026-06-05",
+      "installed_software": [
+        {
+          "name": "Microsoft Exchange Server",
+          "version": "15.1.2375.7"
+        },
+        {
+          "name": "Microsoft .NET Framework",
+          "version": "4.8"
+        },
+        {
+          "name": "OpenSSL",
+          "version": "1.1.1l"
+        },
+        {
+          "name": "Symantec Endpoint Protection",
+          "version": "14.3.3384.1000"
+        }
+      ]
+    },
+    {
+      "asset_id": "IT-SRV-003",
+      "hostname": "it-backup01.corp.local",
+      "ip_address": "10.10.5.13",
+      "asset_type": "server",
+      "department": "IT",
+      "criticality": "high",
+      "os": "Ubuntu 18.04 LTS",
+      "os_version": "18.04",
+      "last_scan_date": "2026-01-15",
+      "installed_software": [
+        {
+          "name": "Veeam Backup & Replication",
+          "version": "11.0.0.837"
+        },
+        {
+          "name": "OpenSSL",
+          "version": "1.0.2n"
+        },
+        {
+          "name": "Python",
+          "version": "3.6.9"
+        },
+        {
+          "name": "OpenSSH",
+          "version": "7.6p1"
+        }
+      ]
+    },
+    {
+      "asset_id": "IT-NET-001",
+      "hostname": "it-proxy01.corp.local",
+      "ip_address": "10.10.5.2",
+      "asset_type": "network_device",
+      "department": "IT",
+      "criticality": "high",
+      "os": "F5 BIG-IP",
+      "os_version": "14.1.4",
+      "last_scan_date": "2026-04-01",
+      "installed_software": [
+        {
+          "name": "F5 BIG-IP",
+          "version": "14.1.4"
+        }
+      ]
+    },
+    {
+      "asset_id": "IT-WS-001",
+      "hostname": "it-ws-admin.corp.local",
+      "ip_address": "10.10.5.51",
+      "asset_type": "workstation",
+      "department": "IT",
+      "criticality": "high",
+      "os": "Windows 10",
+      "os_version": "10.0.19044",
+      "last_scan_date": "2026-06-06",
+      "installed_software": [
+        {
+          "name": "Microsoft Office",
+          "version": "16.0.15928"
+        },
+        {
+          "name": "Google Chrome",
+          "version": "114.0.5735.199"
+        },
+        {
+          "name": "PuTTY",
+          "version": "0.77"
+        },
+        {
+          "name": "WinSCP",
+          "version": "6.1.1"
+        },
+        {
+          "name": "Nmap",
+          "version": "7.92"
+        }
+      ]
+    },
+    {
+      "asset_id": "EXEC-WS-001",
+      "hostname": "exec-ws-ceo.corp.local",
+      "ip_address": "10.10.5.100",
+      "asset_type": "workstation",
+      "department": "Executive",
+      "criticality": "critical",
+      "os": "macOS Ventura",
+      "os_version": "13.2",
+      "last_scan_date": "2026-05-15",
+      "installed_software": [
+        {
+          "name": "Microsoft Office for Mac",
+          "version": "16.70"
+        },
+        {
+          "name": "Google Chrome",
+          "version": "110.0.5481.177"
+        },
+        {
+          "name": "Zoom",
+          "version": "5.13.5"
+        },
+        {
+          "name": "Slack",
+          "version": "4.32.127"
+        },
+        {
+          "name": "1Password",
+          "version": "8.9.13"
+        }
+      ]
+    },
+    {
+      "asset_id": "EXEC-WS-002",
+      "hostname": "exec-ws-ciso.corp.local",
+      "ip_address": "10.10.5.101",
+      "asset_type": "workstation",
+      "department": "Executive",
+      "criticality": "critical",
+      "os": "macOS Ventura",
+      "os_version": "13.5.2",
+      "last_scan_date": "2026-06-01",
+      "installed_software": [
+        {
+          "name": "Microsoft Office for Mac",
+          "version": "16.76"
+        },
+        {
+          "name": "Google Chrome",
+          "version": "114.0.5735.198"
+        },
+        {
+          "name": "Zoom",
+          "version": "5.15.2"
+        },
+        {
+          "name": "CrowdStrike Falcon Sensor",
+          "version": "6.47.15801.0"
+        },
+        {
+          "name": "1Password",
+          "version": "8.10.2"
+        }
+      ]
+    }
+  ]
+}
