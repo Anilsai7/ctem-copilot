@@ -124,37 +124,11 @@ def _client():
     return anthropic.Anthropic()
 
 
-def friendly_error(exc):
-    """Translate an API exception into (headline, detail) for the UI.
-
-    Raw provider exceptions leak request IDs and stack detail at the analyst,
-    which reads as a crash. Every one of these is a *designed* fallback: the
-    deterministic answer is still correct and still shown. The wording says so.
-    """
-    s = str(exc).lower()
-    if "credit balance" in s or "billing" in s or "quota" in s:
-        return ("Claude narration unavailable — the API account has no credits.",
-                "This is the designed fallback, not a failure. The deterministic "
-                "answer below is the same one the tool produces with no LLM "
-                "configured at all. Add credits at console.anthropic.com "
-                "(Plans & Billing) to enable narration.")
-    if "authentication" in s or "invalid x-api-key" in s or "401" in s:
-        return ("Claude narration unavailable — the API key was rejected.",
-                "Check ANTHROPIC_API_KEY for a typo or a truncated paste. The "
-                "deterministic answer below is unaffected.")
-    if "rate limit" in s or "429" in s:
-        return ("Claude narration unavailable — API rate limit reached.",
-                "Retry in a moment. The deterministic answer below is unaffected.")
-    if "overloaded" in s or "529" in s:
-        return ("Claude narration unavailable — the API is temporarily overloaded.",
-                "Retry in a moment. The deterministic answer below is unaffected.")
-    if "connection" in s or "timeout" in s or "network" in s:
-        return ("Claude narration unavailable — could not reach the API.",
-                "Check network access. The deterministic answer below is "
-                "unaffected — the tool does not depend on an external API.")
-    return ("Claude narration unavailable.",
-            f"The deterministic answer below is unaffected. Detail: "
-            f"{str(exc)[:180]}")
+# NOTE: error *presentation* deliberately lives in app.py, not here.
+# This module owns the API interaction; how a failure is worded for an analyst
+# is a UI concern. Keeping it in app.py also means Streamlit — which reloads
+# the entry script but caches imported modules — can never serve a new app.py
+# against a stale copy of this file.
 
 
 # ---------------------------------------------------------------------------

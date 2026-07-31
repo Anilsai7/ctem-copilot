@@ -178,6 +178,44 @@ QMAP = {
 ORDER = list(QMAP.keys())
 
 
+def friendly_error(exc):
+    """Translate an API exception into (headline, detail) for display.
+
+    Lives here rather than in llm_layer because error *presentation* is a UI
+    concern — and because Streamlit reloads this entry script but caches
+    imported modules, so keeping it local removes a whole class of
+    stale-module failure.
+
+    Raw provider exceptions leak request IDs and stack traces at the analyst,
+    which reads as a crash. Every case below is a *designed* fallback: the
+    deterministic answer is still correct and still shown. The wording says so.
+    """
+    s = str(exc).lower()
+    if "credit balance" in s or "billing" in s or "quota" in s:
+        return ("Claude narration unavailable — the API account has no credits.",
+                "This is the designed fallback, not a failure. The deterministic "
+                "answer below is the same one the tool produces with no LLM "
+                "configured at all. Add credits at console.anthropic.com "
+                "(Plans & Billing) to enable narration.")
+    if "authentication" in s or "invalid x-api-key" in s or "401" in s:
+        return ("Claude narration unavailable — the API key was rejected.",
+                "Check ANTHROPIC_API_KEY for a typo or a truncated paste. The "
+                "deterministic answer below is unaffected.")
+    if "rate limit" in s or "429" in s:
+        return ("Claude narration unavailable — API rate limit reached.",
+                "Retry in a moment. The deterministic answer below is unaffected.")
+    if "overloaded" in s or "529" in s:
+        return ("Claude narration unavailable — the API is temporarily overloaded.",
+                "Retry in a moment. The deterministic answer below is unaffected.")
+    if "connection" in s or "timeout" in s or "network" in s:
+        return ("Claude narration unavailable — could not reach the API.",
+                "Check network access. The deterministic answer below is "
+                "unaffected — the tool does not depend on an external API.")
+    return ("Claude narration unavailable.",
+            f"The deterministic answer below is unaffected. Detail: "
+            f"{str(exc)[:180]}")
+
+
 def findings_for(key):
     """The evidence subset an LLM narration for this intent may reference."""
     if key == "critical":
@@ -205,7 +243,7 @@ def llm_answer(question, key):
         try:
             prose = llm_layer.narrate(question, ev)
         except Exception as e:
-            head, detail = llm_layer.friendly_error(e)
+            head, detail = friendly_error(e)
             st.info(f"**{head}**\n\n{detail}")
             st.caption("↓ Deterministic answer — identical to what the tool "
                        "produces with no LLM configured.")
