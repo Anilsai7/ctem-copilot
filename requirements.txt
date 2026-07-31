@@ -3,4 +3,4 @@ pandas>=2.0
 
 # Optional — enables Claude narration in the sidebar toggle.
 # The app works fully without it.
-# anthropic>=0.40
+anthropic>=0.40
