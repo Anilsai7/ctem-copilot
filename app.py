@@ -145,22 +145,26 @@ t_ask, t_q, t_bu, t_dq = st.tabs(
      "Data quality & limits"])
 
 # ============================ ASK =========================================
-with t_ask:
-    Q = ["Which of our assets have critical unpatched CVEs?",
-         "What is our highest-risk server right now and why?",
-         "Which software package should we patch first?",
-         "How many Finance assets are affected by actively exploited vulnerabilities?",
-         "Are any assets past a CISA KEV due date?",
-         "Summarise our posture for the CISO in 3 sentences",
-         "Which business unit has the most critical exposure?",
-         "What would patching Apache HTTP Server reduce our CVE count by?",
-         "List all CVEs affecting network devices, sorted by CVSS",
-         "Assets not scanned in 30 days that also have high-severity CVEs?",
-         "How has our exposure changed since last month?"]
-    q = st.selectbox("Ask about your exposure", Q)
-    i = Q.index(q)
-    st.write("")
+QMAP = {
+    "critical": "Which of our assets have critical unpatched CVEs?",
+    "top_asset": "What is our highest-risk server right now and why?",
+    "patch_first": "Which software package should we patch first?",
+    "finance_kev": "How many Finance assets are affected by actively exploited "
+                   "vulnerabilities?",
+    "overdue": "Are any assets past a CISA KEV due date?",
+    "ciso": "Summarise our posture for the CISO in 3 sentences",
+    "unit": "Which business unit has the most critical exposure?",
+    "apache": "What would patching Apache HTTP Server reduce our CVE count by?",
+    "network": "List all CVEs affecting network devices, sorted by CVSS",
+    "stale": "Assets not scanned in 30 days that also have high-severity CVEs?",
+    "trend": "How has our exposure changed since last month?",
+    "coverage": "What did you NOT assess?",
+}
+ORDER = list(QMAP.keys())
 
+
+def render_answer(key):
+    i = ORDER.index(key)
     if i == 0:
         crit = [f for f in F if f["cvss"] >= 9.0]
         cc = [f for f in crit if f["confidence"] == "confirmed"]
@@ -349,7 +353,7 @@ with t_ask:
                    f"{min(a['last_scan_date'] for a in assets)} to "
                    f"{max(a['last_scan_date'] for a in assets)}.")
 
-    else:
+    elif i == 10:
         st.warning("**I cannot answer this from the data provided.**")
         st.markdown(f"""
 Computing change requires **at least two inventory snapshots**, plus the
@@ -362,6 +366,53 @@ snapshot and CISA KEV is fetched live, so any trend I reported would be **fabric
 **To enable this:** persist each run's findings and diff on `(asset_id, cve)`.
 That gives genuine new / resolved / unchanged counts.
 """)
+
+    else:
+        covered = {r["product"] for r in solve.RULES}
+        allsw = sorted({s["name"] for a in assets for s in a["installed_software"]})
+        missing = [s for s in allsw if s not in covered]
+        st.error(f"**{len(missing)} of {len(allsw)} packages have no detection rule.** "
+                 f"Absence of a finding for these is *not* evidence of safety — it "
+                 f"means we did not check.")
+        st.dataframe(pd.DataFrame({"package (not assessed)": missing}),
+                     use_container_width=True, hide_index=True, height=280)
+        st.caption("Full reasoning is in the **Data quality & limits** tab.")
+
+
+with t_ask:
+    st.markdown("#### Ask the analyst")
+    typed = st.text_input(
+        "Ask anything about your exposure",
+        placeholder="e.g. what should we patch first?  ·  whats our riskiest server?  "
+                    "·  anything overdue?",
+        label_visibility="collapsed")
+
+    key, conf = solve.route_question(typed) if typed.strip() else (None, 0.0)
+
+    if typed.strip() and key:
+        st.caption(f"Interpreted as: **{QMAP[key]}**"
+                   + ("" if conf >= 1.0 else f"  ·  fuzzy match (confidence {conf})"))
+        st.write("")
+        render_answer(key)
+
+    elif typed.strip() and not key:
+        # Graceful degradation: say we didn't understand, then show something
+        # genuinely useful rather than guessing at the question.
+        st.info("I'm not certain what you're asking. Here are the highest-risk "
+                "findings right now — or try one of the examples below.")
+        for f in F[:5]:
+            st.markdown(finding_card(f), unsafe_allow_html=True)
+        st.markdown("**Try:** *what should we patch first* · *whats our riskiest "
+                    "server* · *anything overdue* · *summarise for the CISO* · "
+                    "*what did you not assess*")
+
+    else:
+        st.caption("Type a question above, or pick an example:")
+        picked = st.selectbox("Example questions", ORDER,
+                              format_func=lambda k: QMAP[k],
+                              label_visibility="collapsed")
+        st.write("")
+        render_answer(picked)
 
 # ========================= REMEDIATION QUEUE ==============================
 with t_q:

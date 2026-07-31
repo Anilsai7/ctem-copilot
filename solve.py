@@ -71,6 +71,14 @@ def _between(v, lo, hi):
     return _cmp(v, lo) >= 0 and _cmp(v, hi) < 0
 
 
+def _java_le(v, major, max_update):
+    """Java SE '8.0.271' style: major 8, update 271. True if update <= max_update."""
+    p = str(v).split(".")
+    if len(p) != 3 or not p[2].isdigit():
+        return False
+    return p[0] == str(major) and int(p[2]) <= max_update
+
+
 # ---------------------------------------------------------------------------
 # detection rules
 # ---------------------------------------------------------------------------
@@ -167,6 +175,54 @@ RULES = [
       "about the OS, or this is a Linux agent/proxy rather than the vulnerable "
       "server component. Verify before raising a ticket.",
       requires_os="Windows"),
+
+    # --- crypto libraries -------------------------------------------------
+    # Ranges below were read directly from NVD CPE nodes, not assumed.
+    # NOTE 1.1.1l is the FIX for both, so it must NOT match.
+    # NOTE OpenSSL letter ordering: 1.0.2u < 1.0.2za (u < za lexicographically),
+    #      which our tokenizer gets right.
+    R("OpenSSL", lambda v: _between(v, "1.1.1", "1.1.1l"), "CVE-2021-3711", 9.8,
+      "SM2 decryption buffer overflow. NVD: 1.1.1 <= v < 1.1.1l."),
+    R("OpenSSL", lambda v: (_between(v, "1.1.1", "1.1.1l")
+                            or _between(v, "1.0.2", "1.0.2za")),
+      "CVE-2021-3712", 7.4,
+      "Read buffer overrun processing ASN.1 strings. NVD: 1.0.2 <= v < 1.0.2za, "
+      "or 1.1.1 <= v < 1.1.1l."),
+
+    # --- databases --------------------------------------------------------
+    R("PostgreSQL", lambda v: (_between(v, "12.0", "12.9")
+                               or _between(v, "13.0", "13.5")),
+      "CVE-2021-23214", 8.1,
+      "Server does not reject extra data after SSL/TLS handshake, enabling "
+      "man-in-the-middle injection. NVD: 12.x < 12.9, 13.x < 13.5."),
+    R("PostgreSQL", lambda v: (_between(v, "12.0", "12.11")
+                               or _between(v, "13.0", "13.7")),
+      "CVE-2022-1552", 8.8,
+      "Autovacuum and REINDEX miss security restrictions, allowing privilege "
+      "escalation. NVD: 12.x < 12.11, 13.x < 13.7."),
+
+    # --- Java runtimes ----------------------------------------------------
+    # Deliberately UNCERTAIN. NVD's CPE for Oracle Java is `oracle:jre:1.8.0`
+    # with no update field, so it cannot express "8u271 vs 8u281". We fall back
+    # to Oracle's own Critical Patch Update advisory, which lists affected
+    # releases as "8u281 and earlier". That is vendor-sourced reasoning, not
+    # NVD-verified version matching, and it is labelled as such.
+    R("Java SE", lambda v: _java_le(v, 8, 281), "CVE-2021-2161", 5.9,
+      "Oracle Java SE / OpenJDK libraries flaw (April 2021 CPU). Oracle lists "
+      "8u281 and earlier as affected.",
+      "uncertain",
+      "NVD's CPE for Oracle Java is `oracle:jre:1.8.0` with no update granularity, "
+      "so per-update applicability cannot be machine-verified. This match relies on "
+      "Oracle's CPU advisory text. Confirm the exact build before raising a ticket. "
+      "Separately, the inventory records 8.0.271 while NVD uses 1.8.0:update_271 — "
+      "the two namespaces do not reconcile automatically."),
+    R("Java SE", lambda v: _java_le(v, 7, 291), "CVE-2021-2161", 5.9,
+      "Same April 2021 CPU flaw; Oracle lists 7u291 and earlier as affected. "
+      "Java SE 7 has had no public updates since April 2015.",
+      "uncertain",
+      "Java SE 7 is end-of-life; it receives no public security updates at all, so "
+      "the specific CVE understates the risk. The runtime itself should be removed "
+      "or moved to extended support. CPE granularity prevents automated verification."),
 
     # --- endpoint ---------------------------------------------------------
     R("PuTTY", lambda v: _between(v, "0.68", "0.81"), "CVE-2024-31497", 5.9,
@@ -369,6 +425,68 @@ def cite(f):
     return (f"[{f['asset_id']} | {f['hostname']}] {f['product']} {f['version']} - "
             f"{f['cve']} CVSS {f['cvss']} - {kev}{rw} - {f['confidence'].upper()} - "
             f"risk {f['risk']:.0f}/100 [{f['band']}]")
+
+
+# ---------------------------------------------------------------------------
+# Free-text question routing
+# ---------------------------------------------------------------------------
+# Deliberately keyword-based rather than an LLM call. The router only chooses
+# WHICH precomputed answer to show; it never generates a fact. That means a
+# misrouted question shows the wrong (but still true) answer, instead of a
+# confident wrong one. Fuzzy token overlap absorbs typos like "vulneabilities".
+
+INTENTS = [
+    ("critical",   ["critical", "severe", "worst cve", "cvss 9", "high severity"]),
+    ("top_asset",  ["highest risk", "riskiest", "most at risk", "worst server",
+                    "worst asset", "highest-risk", "top asset", "which server"]),
+    ("patch_first", ["patch first", "patch next", "what to patch", "which software",
+                     "which package", "prioriti", "remediate first", "fix first"]),
+    ("finance_kev", ["finance", "actively exploited", "exploited in the wild"]),
+    ("overdue",    ["due date", "overdue", "past due", "deadline", "passed"]),
+    ("ciso",       ["summar", "posture", "ciso", "overview", "executive summary"]),
+    ("unit",       ["business unit", "department", "which unit", "team"]),
+    ("apache",     ["apache", "http server", "what would patching"]),
+    ("network",    ["network device", "firewall", "router", "switch", "vpn",
+                    "network"]),
+    ("stale",      ["scan", "not scanned", "stale", "30 days", "last scan"]),
+    ("trend",      ["changed", "change since", "last month", "trend", "compared to"]),
+    ("coverage",   ["not assessed", "coverage", "what did you miss", "blind spot",
+                    "not covered", "gap"]),
+]
+
+
+def _tokens(s):
+    return set(re.findall(r"[a-z]+", s.lower()))
+
+
+def route_question(q):
+    """Return (intent_key, confidence) or (None, 0.0) if nothing matches well.
+
+    Never guesses aggressively: below the threshold we return None so the UI
+    can say "I'm not sure what you meant" and show the ranked queue instead of
+    answering a question that wasn't asked.
+    """
+    s = (q or "").lower().strip()
+    if not s:
+        return None, 0.0
+
+    # exact phrase hits win
+    for key, phrases in INTENTS:
+        for p in phrases:
+            if p in s:
+                return key, 1.0
+
+    # fuzzy fallback: token overlap against each intent's vocabulary
+    qt = _tokens(s)
+    best, score = None, 0.0
+    for key, phrases in INTENTS:
+        vocab = _tokens(" ".join(phrases))
+        if not vocab:
+            continue
+        overlap = len(qt & vocab) / max(len(vocab) ** 0.5, 1)
+        if overlap > score:
+            best, score = key, overlap
+    return (best, round(score, 2)) if score >= 0.5 else (None, round(score, 2))
 
 
 # ---------------------------------------------------------------------------

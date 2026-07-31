@@ -1,6 +1,6 @@
 ====================================================================================
   Acme Financial Services (SYNTHETIC — FOR INTERVIEW USE ONLY)
-  Assets 23 | Findings 29 (confirmed 18 / likely 8 / uncertain 3)
+  Assets 23 | Findings 39 (confirmed 26 / likely 8 / uncertain 5)
   KEV-listed 26 | past CISA deadline 26
   CISA KEV 2026.07.29 (live, 1,656 CVEs, released 2026-07-29)
   Analysis date 2026-06-06 (newest scan in the dataset, not wall-clock)
@@ -9,7 +9,7 @@
 ====================================================================================
 Q1. Which of our assets have critical unpatched CVEs?
 ====================================================================================
-I found 8 CONFIRMED critical findings across 5 assets, plus 9 that need verification across 7 assets.
+I found 9 CONFIRMED critical findings across 5 assets, plus 9 that need verification across 7 assets.
 
 CONFIRMED
   [FIN-SRV-002 | fin-db01.corp.local] log4j-core 2.14.0 - CVE-2021-44228 CVSS 10.0 - KEV added 2021-12-10, due 2021-12-24 [OVERDUE], ransomware-linked - CONFIRMED - risk 100/100 [CRITICAL]
@@ -20,6 +20,7 @@ CONFIRMED
   [HR-SRV-001 | hr-app01.corp.local] log4j-core 2.13.3 - CVE-2021-44228 CVSS 10.0 - KEV added 2021-12-10, due 2021-12-24 [OVERDUE], ransomware-linked - CONFIRMED - risk 93/100 [CRITICAL]
   [ENG-SRV-001 | eng-build01.corp.local] Jenkins 2.303.1 - CVE-2024-23897 CVSS 9.8 - KEV added 2024-08-19, due 2024-09-09 [OVERDUE], ransomware-linked - CONFIRMED - risk 92/100 [CRITICAL]
   [HR-SRV-001 | hr-app01.corp.local] Apache Tomcat 9.0.52 - CVE-2025-24813 CVSS 9.8 - KEV added 2025-04-01, due 2025-04-22 [OVERDUE] - CONFIRMED - risk 87/100 [CRITICAL]
+  [FIN-SRV-002 | fin-db01.corp.local] OpenSSL 1.1.1k - CVE-2021-3711 CVSS 9.8 - not in KEV - CONFIRMED - risk 54/100 [MEDIUM]
 
 NEEDS VERIFICATION
   [OPS-NET-003 | ops-vpn01.corp.local] Fortinet FortiOS 6.4.5 - CVE-2023-27997 CVSS 9.8 - KEV added 2023-06-13, due 2023-07-04 [OVERDUE], ransomware-linked - LIKELY - risk 84/100 [CRITICAL]
@@ -61,6 +62,10 @@ FIN-SRV-002 (fin-db01.corp.local) - Finance, critical criticality.
 
   Other findings on this host:
     [FIN-SRV-002 | fin-db01.corp.local] log4j-core 2.14.0 - CVE-2021-45046 CVSS 9.0 - KEV added 2023-05-01, due 2023-05-22 [OVERDUE], ransomware-linked - LIKELY - risk 82/100 [CRITICAL]
+    [FIN-SRV-002 | fin-db01.corp.local] OpenSSL 1.1.1k - CVE-2021-3711 CVSS 9.8 - not in KEV - CONFIRMED - risk 54/100 [MEDIUM]
+    [FIN-SRV-002 | fin-db01.corp.local] PostgreSQL 12.8 - CVE-2022-1552 CVSS 8.8 - not in KEV - CONFIRMED - risk 51/100 [MEDIUM]
+    [FIN-SRV-002 | fin-db01.corp.local] PostgreSQL 12.8 - CVE-2021-23214 CVSS 8.1 - not in KEV - CONFIRMED - risk 49/100 [MEDIUM]
+    [FIN-SRV-002 | fin-db01.corp.local] OpenSSL 1.1.1k - CVE-2021-3712 CVSS 7.4 - not in KEV - CONFIRMED - risk 47/100 [MEDIUM]
 
 ====================================================================================
 Q3. Which software package should we patch first to reduce the most exposure?
@@ -69,7 +74,9 @@ Q3. Which software package should we patch first to reduce the most exposure?
   log4j-core                            100     598      4     2    7       4  OVERDUE
   Google Chrome                          91     414      5     1    5       0  OVERDUE
   Fortinet FortiOS                       84     254      1     3    3       3  OVERDUE
+  OpenSSL                                54     229      4     2    0       0  
   Apache HTTP Server                     99     199      1     2    2       0  OVERDUE
+  PostgreSQL                             51     145      2     2    0       0  
   Microsoft Exchange Server              99      99      1     1    1       0  OVERDUE
   Jenkins                                92      92      1     1    1       0  OVERDUE
   Apache Tomcat                          87      87      1     1    1       0  OVERDUE
@@ -80,6 +87,7 @@ Q3. Which software package should we patch first to reduce the most exposure?
   Cisco IOS XE                           66      66      1     1    1       1  OVERDUE
   Veeam Backup & Replication             60      60      1     1    1       1  OVERDUE
   Mozilla Firefox                        54      54      1     1    1       1  OVERDUE
+  Java SE                                30      45      2     1    0       2  
   Sonatype Nexus Repository Manager      40      40      1     1    0       0  
 
   By total risk removed : log4j-core (598 points across 4 hosts)
@@ -136,24 +144,24 @@ YES - 26 findings across 17 assets are past their CISA deadline as of 2026-06-06
 ====================================================================================
 Q6. Summarise our overall vulnerability posture for the CISO in 3 sentences.
 ====================================================================================
-1. Across 23 assets we confirmed 18 findings and flagged a further 11 that need configuration or platform verification, covering 18 distinct CVEs of which 16 are on CISA's Known Exploited Vulnerabilities list.
+1. Across 23 assets we confirmed 26 findings and flagged a further 13 that need configuration or platform verification, covering 23 distinct CVEs of which 16 are on CISA's Known Exploited Vulnerabilities list.
 
 2. 17 assets carry at least one actively-exploited CVE - 7 of them business-critical - and every matched KEV deadline has already passed, the oldest by 1,662 days.
 
-3. Patch log4j-core first, then validate the 11 configuration-dependent findings; this covers 15 high-signal packages and excludes operating-system patching, so it is a floor on exposure, not a complete picture.
+3. Patch log4j-core first, then validate the 13 configuration-dependent findings; this covers 18 high-signal packages and excludes operating-system patching, so it is a floor on exposure, not a complete picture.
 
 ====================================================================================
 Q7. Which business unit has the most critical exposure?
 ====================================================================================
   unit            worst   total  findings  KEV   assets  crit
+  Finance           100     791        12    6      4/4     2
   Operations         84     520         7    6      4/5     3
-  Finance           100     511         6    6      4/4     2
-  HR                 93     403         5    5      3/3     0
-  IT                 99     358         5    4      4/5     1
-  Engineering        93     302         4    3      2/4     0
+  HR                 93     418         6    5      3/3     0
+  IT                 99     398         6    4      4/5     1
+  Engineering        93     387         6    3      3/4     0
   Executive          91     183         2    2      2/2     2
 
-  Operations - highest aggregate exposure (520 risk points), 3 business-critical assets affected.
+  Finance - highest aggregate exposure (791 risk points), 2 business-critical assets affected.
 
 ====================================================================================
 Q8. What would patching Apache HTTP Server reduce our CVE count by?
@@ -161,8 +169,8 @@ Q8. What would patching Apache HTTP Server reduce our CVE count by?
   Hosts affected            : 1 (FIN-SRV-001)
   Findings closed           : 2 (all confirmed)
   Distinct CVEs closed      : 2 (CVE-2021-41773, CVE-2021-42013)
-  Fleet distinct CVEs       : 18 -> 16 (net reduction 2)
-  Risk points removed       : 199 of 2277
+  Fleet distinct CVEs       : 23 -> 21 (net reduction 2)
+  Risk points removed       : 199 of 2696
 
   One action - upgrade Apache to 2.4.58+ on FIN-SRV-001 - closes both.
 
@@ -198,8 +206,8 @@ Q10. Assets not scanned in the last 30 days that also have high-severity CVEs?
   IT-NET-001  2026-04-01     66d      high      1          78
   HR-WS-002   2026-04-30     37d       low      1          75
   OPS-NET-001 2026-03-15     83d  critical      1          66
-  IT-SRV-003  2026-01-15    142d      high      1          60
-  ENG-SRV-002 2026-04-10     57d      high      1          40
+  IT-SRV-003  2026-01-15    142d      high      2          60
+  ENG-SRV-002 2026-04-10     57d      high      2          40
 
 ====================================================================================
 Q11. How has our exposure changed since last month?
@@ -211,7 +219,7 @@ I cannot answer this from the data provided.
   single snapshot, and CISA KEV is fetched live, so any trend I reported
   would be fabricated.
 
-  What I can state: exposure AS OF 2026-06-06 is 29 findings across 19 assets.
+  What I can state: exposure AS OF 2026-06-06 is 39 findings across 20 assets.
   To enable trend analysis, persist each run's index and diff on (asset_id, cve).
 
 ====================================================================================
@@ -233,8 +241,8 @@ DATA QUALITY AND HONESTY
            Oldest: IT-SRV-003 (2026-01-15), OPS-NET-003 (2026-02-28), OPS-NET-001 (2026-03-15)
            Impact: Software inventory on the oldest hosts may no longer be accurate, so both findings and clean results are less reliable there.
 
-  COVERAGE: 15 of 47 inventory packages have detection rules.
-  NOT ASSESSED (32): 1Password, 7-Zip, Active Directory Domain Services, Adobe Acrobat Reader, Cisco IOS, CrowdStrike Falcon Sensor, Docker, Git, GitLab CE, Homebrew, Java SE, Microsoft .NET Framework, Microsoft DNS Server, Microsoft Office, Microsoft Office for Mac, Microsoft SQL Server, NGINX, Nmap, Node.js, OpenJDK, OpenSSH, OpenSSH for Windows, OpenSSL, PostgreSQL, Prometheus, Python, Ruby, Slack, Symantec Endpoint Protection, Visual Studio Code, WinSCP, Zoom
+  COVERAGE: 18 of 47 inventory packages have detection rules.
+  NOT ASSESSED (29): 1Password, 7-Zip, Active Directory Domain Services, Adobe Acrobat Reader, Cisco IOS, CrowdStrike Falcon Sensor, Docker, Git, GitLab CE, Homebrew, Microsoft .NET Framework, Microsoft DNS Server, Microsoft Office, Microsoft Office for Mac, Microsoft SQL Server, NGINX, Nmap, Node.js, OpenJDK, OpenSSH, OpenSSH for Windows, Prometheus, Python, Ruby, Slack, Symantec Endpoint Protection, Visual Studio Code, WinSCP, Zoom
 
   Absence of a finding for those is NOT evidence of safety - it means we
   did not check. Operating systems are excluded (separate Patch-Tuesday/
