@@ -3,34 +3,32 @@
 Ask natural-language questions about a fleet's vulnerability exposure and get a
 grounded, cited, prioritised answer.
 
-Built against the provided synthetic inventory (23 assets, 5 business units)
-cross-referenced with the live **CISA KEV** catalog and **NIST NVD**.
+Built against the provided synthetic inventory (23 assets, 6 business units)
+cross-referenced with the **live CISA KEV catalog**.
 
 ```bash
-python build_index.py                 # one-time: fetch feeds, build the index
-python ask.py --benchmark             # run the 10 assignment questions
-python ask.py "what should we patch first?"
-python ask.py --show-plan "how many Finance assets are actively exploited?"
+pip install -r requirements.txt
+streamlit run app.py          # web UI  -> http://localhost:8501
+python solve.py               # CLI report, all 11 questions
 ```
 
-No dependencies. Standard library only, Python 3.8+. The LLM layer is optional
-(`--llm`, needs `pip install anthropic` and `ANTHROPIC_API_KEY`); everything
-works without it.
+Core engine (`solve.py`) is **standard library only**. Streamlit and pandas are
+needed for the UI, nothing else.
 
 ---
 
-## The problem this is solving
+## The problem
 
 The client's scanner produced 3,400 findings and the security team started
 ignoring it. That is not a data problem — the data was correct. It is a
-*prioritisation and trust* problem:
+**prioritisation and trust** problem:
 
 1. No ranking, so there was no answer to "what do we do Monday morning".
 2. No business context, so a critical CVE on a test box outranked a real one.
-3. No explanation, so nobody could tell whether a finding deserved the panic.
+3. No explanation, so nobody could tell which findings deserved the panic.
 
-Adding an LLM to that pipeline could easily make it worse: a system that
-*sounds* authoritative and occasionally invents a CVE is more dangerous than a
+Adding an LLM to that pipeline can easily make it worse: a system that *sounds*
+authoritative and occasionally invents a CVE is more dangerous than a
 spreadsheet nobody reads. So the design starts from the trust question.
 
 ---
@@ -38,83 +36,113 @@ spreadsheet nobody reads. So the design starts from the trust question.
 ## Architecture
 
 ```
-  assets.json ─┐
-               ├─► ingest ──► cross-reference ──► score ──► index.json
-  CISA KEV ────┤             (deterministic)   (deterministic)     │
-  NIST NVD ────┘                                                   │
-                                                                   ▼
-   "what should we patch first?" ──► PLAN ──► QuerySpec ──► EXECUTE ──► rows+facts
-                                    (LLM or                (deterministic)   │
-                                     rules)                                  ▼
-                                                              NARRATE ──► VERIFY ──► answer
-                                                              (LLM or       (never
-                                                              template)      an LLM)
+  assets.json ──┐
+                ├──► match (explicit version rules) ──► score ──► answer
+  CISA KEV ─────┘         │                              │          │
+   (live)                 │                              │          │
+                          ▼                              ▼          ▼
+                    confidence tier              confidence     citations
+                 confirmed/likely/uncertain        weighting     + caveats
+
+  question ──► ROUTE ──► [ engine above ] ──► NARRATE ──► VERIFY ──► answer
+               LLM or                          LLM or       never
+               keywords                        templates    an LLM
 ```
 
-**The load-bearing decision: the LLM never touches a number.**
+**The LLM never produces a security fact.** It routes questions and writes prose
+over rows the engine already computed. Matching, scoring, KEV lookup and date
+arithmetic are deterministic — two analysts running the same query get identical
+numbers.
 
-The model does two jobs — turn a question into a typed `QuerySpec`, and write
-prose over rows that Python already computed. It cannot invent a CVE ID,
-because the spec has no field for one, and the narration is checked afterwards.
-
-| Stage | Who does it | Why |
+| Stage | Who | Why |
 |---|---|---|
-| Version → CVE applicability | NVD CPE ranges + local comparator | Reproducible, auditable |
-| Exploitation status, due dates | CISA KEV | Authoritative |
+| Version → CVE applicability | Python, NVD-sourced ranges | Reproducible, checkable |
+| Exploitation, due dates, ransomware | Live CISA KEV feed | Authoritative, current |
 | Risk scoring | Transparent additive formula | Arguable — a client can change the weights |
-| NL → QuerySpec | Claude (or keyword rules) | Genuinely ambiguous, LLMs are good at it |
-| Rows → prose | Claude (or templates) | Genuinely a language task |
-| Citation check | Regex over the evidence set | An LLM cannot be its own auditor |
+| **Question → intent** | **Claude** or keyword router | Genuinely ambiguous |
+| **Rows → prose** | **Claude** or templates | Genuinely a language task |
+| **Citation audit** | **Regex, no LLM** | A model cannot audit itself |
 
-### Division of authority between the two feeds
+*An LLM that cannot reach the numbers cannot get the numbers wrong.*
 
-This matters and is easy to get wrong:
+Every generated answer is scanned for CVE IDs, asset IDs and CVSS scores; each is
+checked against the evidence rows. Unsupported reference → the answer is rejected
+and the deterministic one shown. See the **How AI is used** tab, or
+`llm_layer.py`.
 
-- **KEV** tells you a CVE is being exploited and when CISA requires it fixed.
-  It carries **no CVSS score and no version ranges** — so KEV alone *cannot*
-  tell you whether *your* Apache is affected. Matching on KEV product names
-  produces false positives.
-- **NVD** carries CVSS and, critically, CPE version applicability. Asking NVD
-  `virtualMatchString=cpe:2.3:a:apache:log4j:2.14.1` makes NVD itself decide
-  whether that exact version is in range.
+**Runs fully without an API key** — keyword routing and templates handle all 12
+questions. The LLM is an enhancement, never a dependency.
 
-So: **NVD decides whether it applies, KEV decides how urgent it is.**
+---
 
-### The verification pass
+## Scope decisions (the important part)
 
-Every CVE NVD returns is *independently re-checked* locally against the raw CPE
-ranges using our own version comparator. Two signals per finding:
+**Why not query all of NVD by CPE.** I built that first. Querying NVD by
+`virtualMatchString` for every installed package returned **14,080 findings** —
+Chrome 114 alone matched **2,279 CVEs**, because every CVE fixed in any *later*
+release genuinely applies. Technically correct, and it reproduced the client's
+3,400-finding problem four times over. I cut it.
 
-| NVD says | Local re-check | Confidence |
-|---|---|---|
-| applicable | confirms | `CONFIRMED` |
-| applicable | inconclusive | `LIKELY` (surfaced, ranked lower) |
-| applicable | contradicts | `UNCERTAIN` (flagged as a conflict) |
+That abandoned pipeline is still in `vulnintel/` + `build_index.py` as evidence
+of the experiment and why it was rejected.
 
-The point isn't that our comparator beats NVD's. It's that when two methods
-disagree, the analyst sees the disagreement instead of a single confident
-number.
+**But precision must not become blindness.** Browsers get one high-signal KEV
+CVE (`CVE-2023-4863`, libwebp), not their whole history — because it lands on
+the CEO and CISO laptops and is overdue.
+
+**Operating systems are excluded.** Pulling every Windows/RHEL CVE recreates the
+noise problem, and OS patching runs on a separate Patch-Tuesday → WSUS/MECM
+workflow with different owners.
+
+**Analysis is anchored to the newest scan date (2026-06-06), not wall-clock.**
+Using today's date makes "days overdue" drift on every run. Anchoring to the
+data's own most recent observation makes the report reproducible.
+
+---
+
+## Confidence tiers
+
+Version applicability and exploitability are not the same claim:
+
+| Tier | Meaning | Weight |
+|---|---|---:|
+| `confirmed` | Version is in the affected range; nothing else is required | ×1.00 |
+| `likely` | Version affected, but exploitation needs config the inventory doesn't record | ×0.85 |
+| `uncertain` | A load-bearing precondition is unproven, or the inventory contradicts itself | ×0.70 |
+
+Uncertain findings are **surfaced and labelled, never dropped**. Cisco IOS XE is
+CVSS 10.0 but scores 66/100, because the Web UI precondition is unproven.
 
 ---
 
 ## Risk scoring
 
-Transparent and additive, 0–100, so "why is this number one" is a sentence:
-
 | Component | Max | Rationale |
 |---|---:|---|
-| CVSS severity | 30 | Capped — CVSS alone is what produced the unusable 3,400-item list |
-| Exploitation (KEV) | 30 | Weighted equal to severity: a 7.5 under active attack beats a theoretical 9.8 |
-| Asset criticality | 25 | Business impact |
-| Remediation urgency | 15 | CISA due date / overdue |
+| CVSS severity | 30 | Capped — CVSS alone produced the unusable 3,400-item list |
+| Exploitation (CISA KEV) | 30 | Equal to severity: a 7.5 under active attack beats a theoretical 9.8 |
+| Asset criticality | 25 | Business impact of the host |
+| Deadline urgency | 15 | CISA due-date proximity / overdue |
 
-Every finding carries its own `score_rationale` — the sentences that produced
-the number. Confidence is applied as a ranking weight and reported separately,
-so an uncertain finding is never presented as fact.
+Subtotal × confidence weight. Every finding carries its own `score_rationale`.
 
-**Known gap:** network exposure (internet-facing vs. internal) is one of the
-strongest real prioritisation signals and is absent from the inventory, so it
-contributes nothing here.
+**Known gap:** network exposure (internet-facing vs internal) is one of the
+strongest real prioritisation signals and is **absent from the inventory**, so it
+contributes nothing. The tool does not invent it.
+
+---
+
+## Data-quality checks
+
+Run against the inventory *before* any finding is trusted:
+
+- **7 assets have `last_scan_date` after `metadata.generated_date`** — scans
+  dated after the export was generated.
+- **`IT-SRV-003` reports Ubuntu 18.04 but lists Veeam Backup & Replication**,
+  which is Windows-only server software. Findings for it are auto-downgraded to
+  `uncertain`.
+- **The brief describes 25 assets; the file contains 23.**
+- Scan dates span 2026-01-15 → 2026-06-06.
 
 ---
 
@@ -123,87 +151,72 @@ contributes nothing here.
 The system distinguishes *"we checked and you're clean"* from *"we did not
 check"* — conflating those is how vulnerability programmes lose credibility.
 
-- Products with no CPE mapping are reported as **coverage gaps with reasons**,
-  never as zero findings. Ask: `python ask.py "what did you not assess?"`
-- **Java SE** is deliberately unmapped: NVD uses `1.8.0:update_271`, the
-  inventory says `8.0.271`. Guessing would produce confident-but-wrong
-  applicability, so it is flagged for manual review instead.
-- **Operating systems are out of scope** — querying NVD for "Windows Server
-  2019" returns hundreds of CVEs and recreates the noise problem. OS patching
-  also runs on a different workflow (WSUS/MECM/Satellite). Stated everywhere,
-  not hidden.
-- The inventory metadata claims `asset_count: 23` and contains 23 records; any
-  mismatch is surfaced as a data-integrity note rather than silently accepted.
+- 32 of 47 inventory packages have **no detection rule** and are reported as
+  coverage gaps, never as zero findings. Ask *"what did you not assess?"*
+- **Java SE** findings are `uncertain` on purpose: NVD's CPE is
+  `oracle:jre:1.8.0` with no update granularity, so per-update applicability
+  cannot be machine-verified. The match relies on Oracle's CPU advisory and says
+  so.
+- *"How has our exposure changed since last month?"* returns an explicit
+  **refusal** — one snapshot cannot support a trend, and inventing one would be
+  fabrication.
 
 ---
 
-## Trust & hallucination — where this can still fail
+## Where this can still fail
 
-Honest list:
-
-1. **The CPE mapping is hand-curated.** A wrong mapping produces confidently
-   wrong findings. It's the largest systematic risk and the reason it's a
-   reviewable table rather than a fuzzy matcher.
-2. **NVD's CPE data is imperfect.** Vendors under- and over-declare affected
-   ranges. We inherit that.
-3. **Inventory accuracy is assumed.** If the CMDB says 2.4.49 and the box runs
-   2.4.58, every downstream conclusion is wrong. Real deployments need
-   authenticated scan data, not an inventory export.
-4. **The verifier checks citations, not reasoning.** It catches an invented CVE
-   ID. It cannot catch prose that cites real CVEs but characterises them
-   misleadingly.
-5. **No exploit-prediction signal.** EPSS would materially improve ranking of
-   non-KEV findings.
+1. **Version rules are hand-curated** — a wrong rule produces a confidently
+   wrong finding. Every range in `RULES` was read from NVD CPE nodes, but the
+   table is the largest systematic risk.
+2. **Inventory accuracy is assumed** — if the CMDB says 2.4.49 and the host runs
+   2.4.58, every downstream conclusion is wrong. Production needs authenticated
+   scan data.
+3. **Confidence tiers encode judgement, not measurement** — `likely` reflects our
+   reading of what an exploit requires, not a probe of the host.
+4. **No EPSS** — exploit-prediction scoring would improve ranking of non-KEV findings.
+5. **No attack-path context** — "this workstation is one hop from the DC" doesn't
+   affect ranking yet.
 
 ---
 
 ## What I'd do next
 
-**With another day:** add EPSS scores; add internet-exposure as a scoring
-input; expand the CPE catalog with a confidence rating per mapping; export to
-ServiceNow-ready change tickets grouped by patch action rather than by CVE.
+**A day:** EPSS scores; internet-exposure as a scoring input; ServiceNow-ready
+change tickets grouped by patch action rather than by CVE.
 
-**With another week:** replace the hand-curated catalog with reconciliation
-against authenticated scanner output (Tenable/Qualys already resolve CPEs);
-add exception management with expiry and owner; build the exposure-over-time
-trend the CISO actually wants ("how has our exposure changed?" currently has
-no answer because there's only one snapshot); add attack-path reasoning so
-"this workstation is one hop from the DC" affects the ranking.
+**A week:** reconcile the curated rules against authenticated scanner output
+(Tenable/Qualys already resolve CPEs); exception management with expiry and
+owner; persist each run so the trend question becomes answerable; attack-path
+reasoning.
 
 ---
 
 ## Who this is for
 
-Today it is best suited to a **vulnerability-management analyst or CTEM lead**
-preparing a remediation sprint — someone who can sanity-check the CPE mappings
-and wants the cross-referencing and ranking done for them.
+A **vulnerability-management analyst or CTEM lead** preparing a remediation
+sprint — someone who can sanity-check the rules and wants the cross-referencing
+and ranking done for them.
 
-It is *not* yet an autonomous CISO dashboard: the coverage gaps require a human
-who understands what "we didn't assess Java SE" implies. The CISO-facing output
-(`posture_summary`) is designed to be handed *up* by that analyst, not
-self-served.
+It is *not* yet a self-serve CISO dashboard: the coverage gaps need a human who
+understands what "we didn't assess Java SE" implies. The CISO-facing summary is
+designed to be handed *up* by that analyst.
 
 ---
 
-## Layout
+## Files
 
 ```
-build_index.py        pipeline driver: ingest -> feeds -> cross-ref -> score
-ask.py                CLI
-vulnintel/
-  catalog.py          inventory name -> CPE mapping + documented coverage gaps
-  feeds.py            KEV + NVD clients (cache, retry, rate limit, TLS trust)
-  versions.py         version parsing/comparison (OpenSSL letters, Cisco, etc.)
-  match.py            cross-reference + independent verification pass
-  score.py            explainable risk model
-  query.py            QuerySpec + deterministic router + execution engine
-  answer.py           templated rendering with citations
-  llm.py              optional Claude planner/narrator + citation verifier
-data/index.json       built artifact — every answer reads only from here
-cache/                KEV + NVD responses (offline-capable demo)
-```
+WALKTHROUGH.md        deliverable 2 — decisions, shortcuts, what I would improve
+DISCUSSION.md         deliverable 3 — trust, agentic design, product thinking
+llm_layer.py          optional Claude narration + non-LLM citation verifier
+solve.py              detection rules, scoring, free-text router, CLI report
+app.py                Streamlit UI (4 tabs)
+requirements.txt      streamlit, pandas
+EXPOSURE_REPORT.txt   generated CLI output — all 11 questions
+data/assets.json      provided synthetic inventory
+cache/kev.json        CISA KEV snapshot (offline fallback; live feed preferred)
 
-Index build and query time are separated on purpose: the CISO's "under two
-minutes" applies to asking questions, not to rebuilding a vulnerability corpus,
-and it makes answers reproducible — two analysts querying the same index get
-identical numbers.
+vulnintel/            ABANDONED full-NVD pipeline — kept as evidence of the
+build_index.py        14,080-finding experiment and why it was cut
+ask.py
+```

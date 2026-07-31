@@ -12,6 +12,7 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 
+import llm_layer
 import solve
 
 st.set_page_config(page_title="CTEM Exposure Copilot", page_icon="🛡️",
@@ -100,6 +101,20 @@ with st.sidebar:
     f_cvss = st.slider("Minimum CVSS", 0.0, 10.0, 0.0, 0.1)
 
     st.markdown("---")
+    st.markdown("### AI narration")
+    llm_ok, llm_msg = llm_layer.status()
+    use_llm = st.toggle("Use Claude to write answers", value=False,
+                        disabled=not llm_ok,
+                        help="Claude narrates the findings the engine already "
+                             "computed. It never calculates or looks anything up.")
+    if llm_ok:
+        st.caption(f"🟢 {llm_msg}")
+    else:
+        st.caption(f"⚪ Deterministic mode — {llm_msg}")
+    st.caption("Every generated answer is checked by a non-LLM verifier before "
+               "display. See the **How AI is used** tab.")
+
+    st.markdown("---")
     st.markdown("### Sources")
     st.markdown(
         f"<div class='muted'><b>Inventory</b><br/>assets.json — {len(assets)} assets"
@@ -140,9 +155,9 @@ c[5].metric("Past deadline", len([f for f in view if f["overdue"]]),
             delta="overdue", delta_color="inverse")
 
 st.markdown("---")
-t_ask, t_q, t_bu, t_dq = st.tabs(
+t_ask, t_q, t_bu, t_dq, t_ai = st.tabs(
     ["Ask a question", "Remediation queue", "Business units",
-     "Data quality & limits"])
+     "Data quality & limits", "How AI is used"])
 
 # ============================ ASK =========================================
 QMAP = {
@@ -161,6 +176,62 @@ QMAP = {
     "coverage": "What did you NOT assess?",
 }
 ORDER = list(QMAP.keys())
+
+
+def findings_for(key):
+    """The evidence subset an LLM narration for this intent may reference."""
+    if key == "critical":
+        return [f for f in F if f["cvss"] >= 9.0]
+    if key == "top_asset":
+        srv = [f for f in F if f["asset_type"] == "server"]
+        return [f for f in srv if f["asset_id"] == srv[0]["asset_id"]] if srv else []
+    if key == "finance_kev":
+        return [f for f in F if f["department"] == "Finance" and f["in_kev"]]
+    if key == "overdue":
+        return [f for f in F if f["overdue"]]
+    if key == "apache":
+        return [f for f in F if f["product"] == "Apache HTTP Server"]
+    if key == "network":
+        return [f for f in F if f["asset_type"] == "network_device"]
+    if key == "stale":
+        return [f for f in F if f["cvss"] >= 7.0]
+    return F[:20]
+
+
+def llm_answer(question, key):
+    """Claude narrates the computed findings, then a non-LLM verifier audits it."""
+    ev = findings_for(key)
+    with st.spinner("Claude is writing the answer from the computed findings..."):
+        try:
+            prose = llm_layer.narrate(question, ev)
+        except Exception as e:
+            st.warning(f"LLM unavailable ({e}). Showing the deterministic answer.")
+            render_answer(key)
+            return
+        ok, problems = llm_layer.verify(prose, ev)
+
+    if ok:
+        st.markdown(prose)
+        st.success(f"✅ **Verifier passed** — every CVE, asset and CVSS score in "
+                   f"this answer appears in the {len(ev)} evidence rows the engine "
+                   f"computed. No fabricated identifiers.")
+    else:
+        st.error("❌ **Verifier failed** — the generated text referenced data that "
+                 "is not in the evidence set. Showing the deterministic answer "
+                 "instead.")
+        for p in problems:
+            st.markdown(f"- `{p}`")
+        with st.expander("Show the rejected text"):
+            st.markdown(prose)
+        st.markdown("---")
+        render_answer(key)
+
+    with st.expander(f"🔎 Evidence the model was given ({len(ev)} findings)"):
+        st.dataframe(pd.DataFrame([{
+            "asset": f["asset_id"], "product": f["product"], "version": f["version"],
+            "CVE": f["cve"], "CVSS": f["cvss"], "KEV": f["in_kev"],
+            "due": f["due"], "confidence": f["confidence"], "risk": f["risk"]}
+            for f in ev]), use_container_width=True, hide_index=True)
 
 
 def render_answer(key):
@@ -393,7 +464,10 @@ with t_ask:
         st.caption(f"Interpreted as: **{QMAP[key]}**"
                    + ("" if conf >= 1.0 else f"  ·  fuzzy match (confidence {conf})"))
         st.write("")
-        render_answer(key)
+        if use_llm:
+            llm_answer(typed, key)
+        else:
+            render_answer(key)
 
     elif typed.strip() and not key:
         # Graceful degradation: say we didn't understand, then show something
@@ -412,7 +486,10 @@ with t_ask:
                               format_func=lambda k: QMAP[k],
                               label_visibility="collapsed")
         st.write("")
-        render_answer(picked)
+        if use_llm:
+            llm_answer(QMAP[picked], picked)
+        else:
+            render_answer(picked)
 
 # ========================= REMEDIATION QUEUE ==============================
 with t_q:
@@ -548,6 +625,102 @@ means the same input always produces the same report.
 5. **No attack-path context** — "this workstation is one hop from the DC" doesn't affect
    ranking yet.
 """)
+
+# ========================== HOW AI IS USED ================================
+with t_ai:
+    st.markdown("#### Where AI is used — and deliberately where it is not")
+    ok, msg = llm_layer.status()
+    (st.success if ok else st.info)(
+        f"{'🟢' if ok else '⚪'} **{msg}.** "
+        + ("Toggle *Use Claude to write answers* in the sidebar."
+           if ok else "The app runs fully without it — set `ANTHROPIC_API_KEY` "
+                      "and `pip install anthropic` to enable narration."))
+
+    st.markdown("""
+```
+question ──► ROUTE ──► [ deterministic engine ] ──► NARRATE ──► VERIFY ──► answer
+             (LLM or      matching · scoring         (LLM or     (never
+              keywords)    KEV lookup · dates       templates)    an LLM)
+                                  ▲
+                          NO LLM TOUCHES THIS
+```
+
+**The load-bearing decision: the LLM never produces a security fact.**
+
+| Stage | Who does it | Why |
+|---|---|---|
+| Version → CVE applicability | Python, explicit NVD-sourced ranges | Reproducible and checkable |
+| KEV status, due dates, ransomware | Live CISA feed | Authoritative |
+| Risk scoring | Transparent additive formula | Auditable, and arguable by the client |
+| **Question → intent** | **Claude** (or keyword router) | Genuinely ambiguous; LLMs are good at it |
+| **Rows → prose** | **Claude** (or templates) | Genuinely a language task |
+| **Citation audit** | **Regex over the evidence set** | An LLM cannot be its own auditor |
+
+An LLM that cannot reach the numbers cannot get the numbers wrong.
+""")
+
+    a, b = st.columns(2)
+    with a:
+        st.markdown("##### Why not let the model do more?")
+        st.markdown("""
+The client's failure was a scanner producing **3,400 unprioritised findings**
+that the team learned to ignore. The way to make that *worse* is a system that
+sounds authoritative and occasionally invents a CVE.
+
+Trust, once lost, is not recovered by a better model.
+
+So scoring and matching stay deterministic: **two analysts running the same
+query get identical numbers**. That is a precondition for a CISO signing off
+on a remediation sprint.
+""")
+    with b:
+        st.markdown("##### The verifier")
+        st.markdown("""
+Every generated answer is scanned for **CVE IDs, asset IDs and CVSS scores**,
+and each is checked against the evidence rows the engine computed.
+
+If the model references anything it was not given, the answer is **rejected**
+and the deterministic answer is shown instead — with the rejected text kept
+visible for inspection.
+
+It catches fabricated identifiers. It **cannot** catch prose that cites real
+CVEs but characterises them misleadingly — a real limit, stated plainly.
+""")
+
+    st.markdown("##### Graceful degradation")
+    st.info("With no API key the application still answers all 12 questions via "
+            "the keyword router and templates. **The LLM is an enhancement, never "
+            "a dependency** — a security tool that stops working when an external "
+            "API is down is not a security tool.")
+
+    with st.expander("The exact prompts (system messages sent to Claude)"):
+        st.markdown("**Router** — picks from a fixed enum, cannot invent an intent:")
+        st.code(llm_layer.ROUTER_SYSTEM, language="text")
+        st.markdown("**Narrator** — grounded in supplied evidence only:")
+        st.code(llm_layer.NARRATOR_SYSTEM, language="text")
+
+    with st.expander("Verifier source (llm_layer.verify)"):
+        st.code('''_CVE_RE   = re.compile(r"CVE-\\d{4}-\\d{4,7}", re.I)
+_ASSET_RE = re.compile(r"\\b[A-Z]{2,4}-(?:SRV|WS|NET)-\\d{3}\\b")
+_CVSS_RE  = re.compile(r"CVSS\\s*([0-9]{1,2}(?:\\.[0-9])?)", re.I)
+
+def verify(text, findings):
+    problems  = []
+    ok_cves   = {f["cve"].upper() for f in findings}
+    ok_assets = {f["asset_id"]    for f in findings}
+    ok_cvss   = {str(f["cvss"])   for f in findings}
+
+    for c in {m.upper() for m in _CVE_RE.findall(text)}:
+        if c not in ok_cves:
+            problems.append(f"UNSUPPORTED CVE: {c} is not in the evidence set.")
+    for a in set(_ASSET_RE.findall(text)):
+        if a not in ok_assets:
+            problems.append(f"UNSUPPORTED ASSET: {a} is not in the evidence set.")
+    for s in set(_CVSS_RE.findall(text)):
+        if s not in ok_cvss:
+            problems.append(f"UNSUPPORTED CVSS: {s} matches no score in evidence.")
+
+    return (not problems), problems''', language="python")
 
 st.markdown("---")
 st.caption(f"assets.json · CISA KEV {kev_raw['catalogVersion']} ({kev_mode}, "
